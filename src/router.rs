@@ -13,5 +13,9 @@ pub fn build_routes(pool: Pool<Postgres>) -> Router {
             "/auth/login",
             post(users::apis::login), //.post(users::apis::get_users), // .put(users::apis::edit_user),
         )
+        .route(
+            "/auth/register",
+            post(users::apis::register), //.post(users::apis::get_users), // .put(users::apis::edit_user),
+        )
         .with_state(pool)
 }

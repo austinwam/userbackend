@@ -24,16 +24,9 @@ pub async fn getbyemail(pool: PgPool, email: String) -> Result<User, sqlx::Error
         .fetch_one(&pool)
         .await?;
     Ok(euser)
-    // match euser {
-    //     Ok(user) => Some(user),
-    //     Err(e) => {
-    //         tracing::error!("{}", e);
-    //         None
-    //     }
-    // }
 }
 
-// pub async fn get_user_by_username(username: &str, state: &SharedState) -> Option<User> {
+// pub async fn get_user_by_email(username: &str, state: &SharedState) -> Option<User> {
 //     let query_get = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = $1")
 //         .bind(username)
 //         .fetch_one(&state.pgpool)

@@ -3,13 +3,13 @@ GET http://0.0.0.0:3000/api/users HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOjQsImV4cCI6MTcwNTMzNzM2Nn0.ne3Vtwyh7BqxeLha5IUfHmirpEV30R-tqOJoZZSGM4M
 ###
-POST http://0.0.0.0:3000/api/users HTTP/1.1
+POST http://0.0.0.0:3000/api/auth/register HTTP/1.1
 content-type: application/json
 
 {
    "username":"austinwam",
    "phone":"0745456456",
-   "email":"austin@gmail",
+   "email":"austin@gmail.com",
    "status":"new",
    "password":"1234567",
    "role":{
@@ -24,7 +24,7 @@ POST http://0.0.0.0:3000/api/auth/login HTTP/1.1
 content-type: application/json
 
 {
-   "email":"austin@gmail",
+   "email":"austin@gmail.com",
    "password":"1234567"
 }
 

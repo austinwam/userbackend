@@ -2,7 +2,7 @@ use crate::common::jwt_auth::{decode_claims, generate_token};
 
 use super::db;
 
-use super::models::{CreateUser, User, UserLogin};
+use super::models::{CreateUser, UserLogin};
 use axum::extract::{self, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -12,10 +12,30 @@ use hyper::HeaderMap;
 use serde_json::json;
 use sqlx::PgPool;
 
+// - - - - - - - - - - - [ROUTES] - - - - - - - - - - -
+
+// pub fn user_route(pool: Pool<Postgres>) -> Router {
+//     Router::new()
+//         .route(
+//             "/users",
+//             axum::routing::post(create_user).get(get_users), // .put(users::apis::edit_user),
+//         )
+//         .route(
+//             "/auth/login",
+//             axum::routing::post(login), //.post(users::apis::get_users), // .put(users::apis::edit_user),
+//         )
+//         .route(
+//             "/auth/register",
+//             axum::routing::post(register), //.post(users::apis::get_users), // .put(users::apis::edit_user),
+//         )
+//         .with_state(pool)
+// }
+
+// - - - - - - - - - - - [HANDLERS] - - - - - - - - - - -
 #[utoipa::path(
     post,
     path = "/api/login",
-    request_body = CreateUser,
+    request_body = UserLogin,
     responses(
         (status = 201, description = "User created successfully", body = Json<serde_json::Value>),
         (status = 500, description = "User could not be created", body = Json<serde_json::Value>),
@@ -67,6 +87,61 @@ pub async fn login(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({"status": "error","message": format!("{:?}", err)})),
             ));
+        }
+    }
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/register",
+    request_body = CreateUser,
+    responses(
+        (status = 201, description = "User created successfully", body = Json<serde_json::Value>),
+        (status = 500, description = "User could not be created", body = Json<serde_json::Value>),
+    )
+)]
+
+pub async fn register(
+    extract::State(pool): extract::State<PgPool>,
+    Json(newiuser): Json<CreateUser>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let useremail = db::getbyemail(pool.clone(), newiuser.email.clone()).await;
+    match useremail {
+        Ok(_) => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"status": "error","message": "user already exists."})),
+            ));
+        }
+        Err(_) => {
+            let user = db::addtodb(pool, newiuser).await;
+            match user {
+                Ok(userdata) => {
+                    let gtoken = generate_token(&userdata);
+                    match gtoken {
+                        Ok(token) => {
+                            let json_response = serde_json::json!({
+                                "status": "success",
+                                "token": token,
+                                "data": userdata,
+                            });
+                            return Ok(Json(json_response));
+                        }
+                        Err(err) => {
+                            return Err((
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                                Json(json!({"status": "error","message": format!("{:?}", err)})),
+                            ));
+                        }
+                    }
+                }
+                Err(err) => {
+                    return Err((
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({"status": "error","message": format!("{:?}", err)})),
+                    ));
+                }
+            }
         }
     }
 }
