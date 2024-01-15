@@ -60,14 +60,3 @@ async fn health_check() -> StatusCode {
     )
 )]
 struct ApiDoc;
-
-// extern crate bcrypt;
-
-// use bcrypt::{hash, verify, DEFAULT_COST};
-
-// fn main() {
-//     let hashed = hash("hunter2", DEFAULT_COST).unwrap();
-//     println!("{}", hashed);
-//     let valid = verify("hunter2", &hashed).unwrap();
-//     println!("{:?}", valid);
-// }

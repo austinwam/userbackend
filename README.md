@@ -1,2 +1,3 @@
 # userbackend
-user auth
+
+user, auth,jwt
