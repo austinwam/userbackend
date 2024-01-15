@@ -117,11 +117,12 @@ pub async fn get_users(
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     tracing::trace!("authentication details: {:#?}", headers);
     let claims = match decode_claims(&headers) {
-        Ok(claims) => claims,
+        Ok(claimhs) => {
+            println!("{:#?}", claimhs);
+        }
         Err((status_code, json_value)) => return Err((status_code, json_value)),
     };
 
-    tracing::trace!("authentication details");
     let results = db::allusers(pool).await.unwrap();
     Ok(Json(results))
 }
