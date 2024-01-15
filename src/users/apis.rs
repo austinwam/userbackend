@@ -1,4 +1,4 @@
-use crate::users::jwt::generate_tokens;
+use crate::common::jwt_auth::{decode_claims, generate_token};
 
 use super::db;
 
@@ -8,6 +8,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
 use bcrypt::verify;
+use hyper::HeaderMap;
 use serde_json::json;
 use sqlx::PgPool;
 
@@ -31,13 +32,26 @@ pub async fn login(
             let valid = verify(userlogin.password, &userdata.password).unwrap();
             println!("{}", valid);
             if valid == true {
-                let token = generate_tokens(userdata);
-                println!("{}", token);
-                let json_response = serde_json::json!({
-                    "status": "success",
-                    "data": token
-                });
-                return Ok(Json(json_response));
+                let token = generate_token(&userdata);
+                match token {
+                    Ok(usertoken) => {
+                        println!("{}", usertoken);
+                        let json_response = serde_json::json!({
+                            "status": "success",
+                            "data": usertoken
+                        });
+                        return Ok(Json(json_response));
+                    }
+                    Err(err) => {
+                        return Err((
+                            StatusCode::BAD_REQUEST,
+                            Json(json!({
+                                "status": "error",
+                                "message": format!("{:?}", err)
+                            })),
+                        ));
+                    }
+                }
             } else {
                 return Err((
                     StatusCode::BAD_REQUEST,
@@ -97,7 +111,16 @@ pub async fn create_user(
         (status = 500, description = "Internal server error when retrieving list of all user", body = Json<Vec<User>>)
     )
 )]
-pub async fn get_users(State(pool): State<PgPool>) -> Result<impl IntoResponse, Json<Vec<User>>> {
+pub async fn get_users(
+    State(pool): State<PgPool>,
+    headers: HeaderMap,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    tracing::trace!("authentication details: {:#?}", headers);
+    let claims = match decode_claims(&headers) {
+        Ok(claims) => claims,
+        Err((status_code, json_value)) => return Err((status_code, json_value)),
+    };
+
     tracing::trace!("authentication details");
     let results = db::allusers(pool).await.unwrap();
     Ok(Json(results))

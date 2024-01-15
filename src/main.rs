@@ -1,5 +1,5 @@
+mod common;
 mod db;
-// mod jwt;
 mod router;
 mod users;
 use axum::{routing::get, Router};
