@@ -1,4 +1,7 @@
+use crate::users::jwt::generate_tokens;
+
 use super::db;
+
 use super::models::{CreateUser, User, UserLogin};
 use axum::extract::{self, State};
 use axum::http::StatusCode;
@@ -28,9 +31,11 @@ pub async fn login(
             let valid = verify(userlogin.password, &userdata.password).unwrap();
             println!("{}", valid);
             if valid == true {
+                let token = generate_tokens(userdata);
+                println!("{}", token);
                 let json_response = serde_json::json!({
                     "status": "success",
-                    "data": userdata
+                    "data": token
                 });
                 return Ok(Json(json_response));
             } else {
@@ -93,6 +98,7 @@ pub async fn create_user(
     )
 )]
 pub async fn get_users(State(pool): State<PgPool>) -> Result<impl IntoResponse, Json<Vec<User>>> {
+    tracing::trace!("authentication details");
     let results = db::allusers(pool).await.unwrap();
     Ok(Json(results))
 }
