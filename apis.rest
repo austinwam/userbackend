@@ -1,0 +1,27 @@
+###
+GET http://0.0.0.0:3000/api/users HTTP/1.1
+###
+POST http://0.0.0.0:3000/api/users HTTP/1.1
+content-type: application/json
+
+{
+   "username":"austinwam",
+   "phone":"0745456456",
+   "email":"austin@gmail",
+   "status":"new",
+   "password":"1234567",
+   "role":{
+      "level":"admin",
+      "permissions":[
+         "all"
+      ]
+   }
+}
+###
+POST http://0.0.0.0:3000/api/auth/login HTTP/1.1
+content-type: application/json
+
+{
+   "email":"austin@gmail",
+   "password":"12345672"
+}
